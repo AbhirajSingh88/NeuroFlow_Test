@@ -1,0 +1,46 @@
+Question1) 
+Using the first query, I tried to compute users who have completed exercise in each month of each year
+and using second query I tried to compute the actual number of users in each month-year basis
+Then I combined these result sets and fetched them through an outer query to calculate % of users 
+
+select t_year, t_month, (u_users*100)/t_users
+from(
+select EXTRACT(YEAR from u.created_at),EXTRACT(MONTH from u.created_at),count(distinct u.user_id) as u_users from users u
+left outer join exercises e
+on u.user_id = e.user_id
+
+where EXTRACT(MONTH from u.created_at) = EXTRACT(MONTH from e.exercise_completion_date)
+and EXTRACT(YEAR from u.created_at) = EXTRACT(YEAR from e.exercise_completion_date)
+group by EXTRACT(YEAR from u.created_at),EXTRACT(MONTH from u.created_at)
+
+union all
+
+select EXTRACT(YEAR from u.created_at) as t_year,EXTRACT(MONTH from u.created_at) as t_month,count(distinct user_id) as t_users from users
+group by EXTRACT(YEAR from created_at),EXTRACT(MONTH from created_at)
+)w
+
+
+Question2)
+Subquery counts distinct exercises for each user, and the outer query groups dist_exer count to calculate total users with in each group of dist_exer 
+
+select dist_exer,count(user_id) from (
+select user_id ,count(distinct exercise_id) as dist_exer from
+exercises group by user_id)
+group by dist_exer
+
+Question3)
+
+#Assuming Phq9 table has only those providers listed in Providers table, else I would have used left outer join instead of inner join, Oracle 12 syntax followed for first 5 rows
+
+select ph.organization_id,ph.patient_id, avg(ph.score) as avg_score
+from Providers pro
+inner join Phq9 ph
+on pro.provider_id = ph.provider_id
+group by ph.organization_id,ph.patient_id
+order by avg_score desc
+FETCH FIRST 5 ROWS ONLY;
+
+
+
+
+
